@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16            # or whatever version you need
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "5432:5432"               # host → container
+    volumes:
+      # 1. Persist database files between restarts
+      - db_data:${PGDATA}
+
+      # 2. Run every *.sql or *.sh in this dir exactly **once**
+      #    when the container is first created:
+      - ./sql:/docker-entrypoint-initdb.d:ro
+
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 10s
+      retries: 5
+
+volumes:
+  db_data:
